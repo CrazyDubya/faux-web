@@ -1,0 +1,49 @@
+{
+  "name": "fauxcustomer",
+  "version": "0.1.0",
+  "description": "SimulaCust: Behavioral simulation agents for testing agentic e-commerce systems",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "simulacust": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write src/**/*.ts",
+    "simulate": "node dist/cli.js run",
+    "simulate:adversarial": "node dist/cli.js run --suite adversarial"
+  },
+  "keywords": [
+    "simulation",
+    "testing",
+    "e-commerce",
+    "ai",
+    "agents",
+    "fauxbank"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "commander": "^12.1.0",
+    "yaml": "^2.6.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "eslint": "^9.16.0",
+    "prettier": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

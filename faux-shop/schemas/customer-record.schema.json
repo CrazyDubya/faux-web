@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nanobanana.shop/schemas/customer-record.json",
+  "title": "Customer Record",
+  "description": "Verified customer facts - no promises, no notes, no conversation",
+  "type": "object",
+  "required": ["id", "createdAt", "standing", "tier", "aggregateMetrics"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "email": { "type": "string", "format": "email" },
+    "standing": { "type": "string", "enum": ["good", "watch", "restricted", "banned"] },
+    "tier": { "type": "string", "enum": ["standard", "silver", "gold", "platinum"] },
+    "aggregateMetrics": { "$ref": "#/definitions/customerMetrics" },
+    "flags": { "type": "array", "items": { "$ref": "#/definitions/accountFlag" } },
+    "orderHistory": { "type": "array", "items": { "$ref": "#/definitions/orderSummary" } },
+    "refundHistory": { "type": "array", "items": { "$ref": "#/definitions/refundSummary" } }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "customerMetrics": {
+      "type": "object",
+      "required": ["totalOrders", "totalSpent", "refundRate", "avgOrderValue", "accountAgeDays"],
+      "properties": {
+        "totalOrders": { "type": "integer", "minimum": 0 },
+        "totalSpent": { "type": "number", "minimum": 0 },
+        "refundRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "avgOrderValue": { "type": "number", "minimum": 0 },
+        "accountAgeDays": { "type": "integer", "minimum": 0 },
+        "generationsTotal": { "type": "integer", "minimum": 0 },
+        "lastOrderDate": { "type": "string", "format": "date-time" }
+      }
+    },
+    "accountFlag": {
+      "type": "object",
+      "required": ["type", "setAt", "reason"],
+      "properties": {
+        "type": { "type": "string", "enum": ["chargeback_history", "refund_abuse", "velocity_violation", "content_violation", "payment_issue"] },
+        "setAt": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "orderSummary": {
+      "type": "object",
+      "required": ["id", "createdAt", "status", "total", "itemCount"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "processing", "shipped", "delivered", "cancelled", "refunded"] },
+        "total": { "type": "number", "minimum": 0 },
+        "itemCount": { "type": "integer", "minimum": 1 },
+        "shippedAt": { "type": "string", "format": "date-time" },
+        "deliveredAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "refundSummary": {
+      "type": "object",
+      "required": ["id", "orderId", "createdAt", "amount", "reasonCode", "approvalType"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "orderId": { "type": "string", "format": "uuid" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "amount": { "type": "number", "minimum": 0 },
+        "reasonCode": { "type": "string", "enum": ["damaged_product", "wrong_item", "not_as_described", "never_arrived", "customer_request", "quality_issue"] },
+        "approvalType": { "type": "string", "enum": ["automatic", "agent_review", "human_review"] }
+      }
+    }
+  }
+}

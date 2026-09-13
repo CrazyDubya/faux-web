@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nanobanana.shop/schemas/session-state.json",
+  "title": "Session State",
+  "description": "Complete session state for soft amnesia architecture",
+  "type": "object",
+  "required": ["id", "customerId", "createdAt", "lastActivity", "metrics", "status"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "customerId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "lastActivity": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "reset", "completed", "abandoned"]
+    },
+    "metrics": {
+      "$ref": "#/definitions/sessionMetrics"
+    },
+    "task": {
+      "oneOf": [
+        { "$ref": "#/definitions/generationTask" },
+        { "$ref": "#/definitions/supportTask" },
+        { "$ref": "#/definitions/checkoutTask" },
+        { "type": "null" }
+      ]
+    },
+    "conversationWindow": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "$ref": "#/definitions/conversationTurn"
+      }
+    },
+    "archivedTasks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/archivedTask"
+      }
+    },
+    "pendingNotification": {
+      "type": ["string", "null"],
+      "enum": ["session_reset", "task_archived", "escalation_pending", null]
+    }
+  },
+  "definitions": {
+    "sessionMetrics": {
+      "type": "object",
+      "required": ["turnCount", "manipulationFlagsTriggered", "emptyTurns", "taskChanges"],
+      "properties": {
+        "turnCount": { "type": "integer", "minimum": 0 },
+        "manipulationFlagsTriggered": { "type": "integer", "minimum": 0 },
+        "emptyTurns": { "type": "integer", "minimum": 0 },
+        "taskChanges": { "type": "integer", "minimum": 0 },
+        "totalSessionTurns": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "conversationTurn": {
+      "type": "object",
+      "required": ["role", "content", "timestamp"],
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "generationTask": {
+      "type": "object",
+      "required": ["type", "originalPrompt", "versions", "currentVersionId"],
+      "properties": {
+        "type": { "const": "generation" },
+        "originalPrompt": { "type": "string", "maxLength": 2000 },
+        "versions": { "type": "array", "items": { "$ref": "#/definitions/imageVersion" } },
+        "currentVersionId": { "type": ["string", "null"], "format": "uuid" },
+        "generationCount": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "imageVersion": {
+      "type": "object",
+      "required": ["id", "createdAt", "promptDelta", "imageRef", "status"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "promptDelta": { "type": "string", "maxLength": 500 },
+        "imageRef": { "type": "string" },
+        "status": { "type": "string", "enum": ["generating", "complete", "failed", "flagged"] },
+        "selected": { "type": "boolean", "default": false }
+      }
+    },
+    "supportTask": {
+      "type": "object",
+      "required": ["type", "topic", "status"],
+      "properties": {
+        "type": { "const": "support" },
+        "topic": { "type": "string", "enum": ["order_status", "refund_request", "generation_help", "technical_issue", "billing_question", "general_inquiry", "complaint"] },
+        "referencedOrders": { "type": "array", "items": { "type": "string", "format": "uuid" } },
+        "status": { "type": "string", "enum": ["open", "pending_info", "escalated", "resolved"] },
+        "escalationReason": { "type": "string" },
+        "resolutionCode": { "type": "string" }
+      }
+    },
+    "checkoutTask": {
+      "type": "object",
+      "required": ["type", "cartItems", "subtotal", "paymentStatus"],
+      "properties": {
+        "type": { "const": "checkout" },
+        "cartItems": { "type": "array", "items": { "$ref": "#/definitions/cartItem" } },
+        "appliedDiscounts": { "type": "array", "items": { "$ref": "#/definitions/appliedDiscount" } },
+        "subtotal": { "type": "number", "minimum": 0 },
+        "tax": { "type": "number", "minimum": 0 },
+        "shipping": { "type": "number", "minimum": 0 },
+        "total": { "type": "number", "minimum": 0 },
+        "paymentStatus": { "type": "string", "enum": ["pending", "processing", "completed", "failed", "refunded"] },
+        "shippingAddress": { "$ref": "#/definitions/address" }
+      }
+    },
+    "cartItem": {
+      "type": "object",
+      "required": ["id", "productType", "quantity", "unitPrice"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "productType": { "type": "string", "enum": ["print_small", "print_medium", "print_large", "print_xlarge", "canvas", "poster"] },
+        "imageVersionId": { "type": "string", "format": "uuid" },
+        "quantity": { "type": "integer", "minimum": 1 },
+        "unitPrice": { "type": "number", "minimum": 0 },
+        "lineTotal": { "type": "number", "minimum": 0 }
+      }
+    },
+    "appliedDiscount": {
+      "type": "object",
+      "required": ["code", "source", "type", "amount"],
+      "properties": {
+        "code": { "type": "string" },
+        "source": { "type": "string", "enum": ["promotion", "tier_benefit", "system"] },
+        "type": { "type": "string", "enum": ["percentage", "fixed", "shipping"] },
+        "amount": { "type": "number", "minimum": 0 },
+        "description": { "type": "string" }
+      }
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "line1": { "type": "string" },
+        "line2": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "postalCode": { "type": "string" },
+        "country": { "type": "string" }
+      }
+    },
+    "archivedTask": {
+      "type": "object",
+      "required": ["id", "type", "archivedAt", "summary"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "type": { "type": "string", "enum": ["generation", "support", "checkout"] },
+        "archivedAt": { "type": "string", "format": "date-time" },
+        "summary": { "type": "object" }
+      }
+    }
+  }
+}
