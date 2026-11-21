@@ -17,7 +17,11 @@ CREATE TABLE customers (
 
 -- Accounts table
 CREATE TABLE accounts (
-    id TEXT PRIMARY KEY CHECK (id GLOB '[A-Z][A-Z]-[A-Z][A-Z][A-Z][A-Z]-[A-Z][A-Z][A-Z][A-Z][A-Z][A-Z][A-Z][A-Z]-[A-Z][A-Z]'),
+    id TEXT PRIMARY KEY CHECK (
+        id GLOB '??-????-????????-??'
+        AND id NOT GLOB '*[^A-Z-]*'
+        AND length(replace(id, '-', '')) = 16
+    ),
     type TEXT NOT NULL CHECK (type IN ('CH', 'SV', 'MM', 'CD', 'LN', 'MG', 'CC', 'LC', 'MC', 'TR', 'ES', 'OP')),
     segment TEXT NOT NULL CHECK (segment IN ('RETL', 'COMM', 'GOVT')),
     owner_id TEXT NOT NULL REFERENCES customers(id),
